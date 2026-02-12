@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Recharge Wallet</title>
+  <link rel="stylesheet" href="/static/apple.css">
+  <script>
+    function getRFID() {
+      fetch("/api/rfid/latest")
+        .then(r => r.json())
+        .then(d => {
+          if (d.uid) {
+            document.getElementById("uid").value = d.uid;
+          }
+        });
+    }
+    setInterval(getRFID, 1000);
+  </script>
+</head>
+<body>
+<header>
+  <h1>Recharge</h1>
+  <p>Add funds to wallet</p>
+</header>
+<div class="container">
+  <div class="nav">
+    <a href="/">Home</a>
+    <a href="/ui/milk">Milk</a>
+    <a href="/ui/transactions">History</a>
+  </div>
+  <div class="card">
+    <form method="POST" action="/recharge">
+      <div class="label">RFID UID</div>
+      <input id="uid" name="uid" readonly required>
+      <div class="label">Amount (₹)</div>
+      <input name="amount" type="number" min="1" required>
+      <button>Add Funds</button>
+    </form>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>MilkPay</title>
+  <link rel="stylesheet" href="/static/apple.css">
+  <style>
+    .scan-ring {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      border: 3px solid #0071e3;
+      margin: 40px auto;
+      animation: pulse 1.8s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 0.6; }
+      50% { transform: scale(1.05); opacity: 1; }
+      100% { transform: scale(1); opacity: 0.6; }
+    }
+
+    .detected {
+      animation: none;
+      background: #0071e3;
+    }
+  </style>
+
+  <script>
+    function pollRFID() {
+      fetch("/api/rfid/latest")
+        .then(r => r.json())
+        .then(d => {
+          if (d.uid) {
+            document.getElementById("status").innerText = "Card Detected";
+            document.getElementById("ring").classList.add("detected");
+
+            setTimeout(() => {
+              window.location.href = "/ui/milk";
+            }, 1200);
+          }
+        });
+    }
+    setInterval(pollRFID, 700);
+  </script>
+</head>
+
+<body>
+  <header>
+    <h1>MilkPay</h1>
+    <p>Smart RFID Milk Vending</p>
+  </header>
+
+  <div class="container">
+    <div class="card" style="text-align:center;">
+      <div id="ring" class="scan-ring"></div>
+      <div class="value" id="status">Scan your RFID card</div>
+      <div class="label">Hold card near reader</div>
+    </div>
+  </div>
+</body>
+</html>

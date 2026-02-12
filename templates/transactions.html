@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Transactions</title>
+  <link rel="stylesheet" href="/static/apple.css">
+
+  <style>
+    body {
+      background: #f5f5f7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto;
+      margin: 0;
+      color: #1d1d1f;
+    }
+
+    /* ---------- HEADER ---------- */
+    header {
+      text-align: center;
+      padding: 30px 16px 10px;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 600;
+    }
+
+    header p {
+      margin-top: 6px;
+      color: #6e6e73;
+      font-size: 14px;
+    }
+
+    /* ---------- NAV ---------- */
+    .nav {
+      display: flex;
+      justify-content: center;
+      gap: 24px;   /* 👈 FIXED GAP */
+      margin: 18px 0 30px;
+    }
+
+    .nav a {
+      text-decoration: none;
+      font-size: 14px;
+      color: #0071e3;
+      font-weight: 500;
+    }
+
+    /* ---------- CONTAINER ---------- */
+    .container {
+      max-width: 520px;
+      margin: auto;
+      padding: 0 16px 40px;
+    }
+
+    /* ---------- TRANSACTION CARD ---------- */
+    .tx-card {
+      background: white;
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .tx-left {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .tx-type {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.4px;
+    }
+
+    .tx-uid {
+      font-size: 13px;
+      color: #6e6e73;
+    }
+
+    .tx-time {
+      font-size: 12px;
+      color: #9e9ea3;
+    }
+
+    .tx-amount {
+      font-size: 16px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .credit {
+      color: #1aa34a;   /* ✅ GREEN */
+    }
+
+    .debit {
+      color: #ff3b30;   /* Apple red */
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h1>Transactions</h1>
+  <p>Milk purchases & recharges</p>
+</header>
+
+<div class="nav">
+  <a href="/">Home</a>
+  <a href="/ui/milk">Milk</a>
+  <a href="/ui/recharge">Recharge</a>
+  <a href="/ui/register">Register</a>
+</div>
+
+<div class="container">
+
+  {% for row in rows %}
+  <div class="tx-card">
+
+    <div class="tx-left">
+      <div class="tx-type">{{ row[2] }}</div>
+      <div class="tx-uid">UID: {{ row[1] }}</div>
+      <div class="tx-time">{{ row[0] }}</div>
+    </div>
+
+    {% if row[3] %}
+      <div class="tx-amount credit">
+        +₹{{ "%.2f"|format(row[3]) }}
+      </div>
+    {% else %}
+      <div class="tx-amount debit">
+        −₹{{ "%.2f"|format(row[4]) }}
+      </div>
+    {% endif %}
+
+  </div>
+  {% endfor %}
+
+</div>
+
+</body>
+</html>

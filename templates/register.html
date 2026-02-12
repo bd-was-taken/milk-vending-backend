@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Register Farmer</title>
+  <link rel="stylesheet" href="/static/apple.css">
+</head>
+<body>
+
+<header>
+  <h1>Register Farmer</h1>
+  <p>Link RFID Tag to User</p>
+</header>
+
+<div class="container">
+  
+  <form action="/register" method="POST" class="card">
+    
+    <div class="form-group">
+      <div class="label">RFID Tag ID</div>
+      <input type="text" name="uid" value="{{ uid }}" placeholder="Scan or Type UID" required 
+             style="font-family: monospace; letter-spacing: 1px;">
+    </div>
+
+    <div class="form-group">
+      <div class="label">Farmer Name</div>
+      <input type="text" name="name" placeholder="e.g. Ramesh Kumar" required autofocus>
+    </div>
+
+    <div class="form-group">
+      <div class="label">Phone Number</div>
+      <input type="tel" name="phone" placeholder="98765 43210" required>
+    </div>
+
+    <div class="form-group">
+      <div class="label">Village / Address</div>
+      <input type="text" name="address" placeholder="e.g. North Street, Kovai">
+    </div>
+
+    <button type="submit" class="btn-primary">Save Registration</button>
+    
+    <div style="margin-top: 20px; text-align: center;">
+        <a href="/" style="color: #ff3b30; text-decoration: none; font-weight: 500;">Cancel</a>
+    </div>
+  </form>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Milk Dispense</title>
+  <link rel="stylesheet" href="/static/apple.css">
+
+  <script>
+    function fetchRFID() {
+      fetch("/api/rfid/latest")
+        .then(r => r.json())
+        .then(d => {
+          if (d.uid) {
+            document.getElementById("uid").value = d.uid;
+          }
+        });
+    }
+    setInterval(fetchRFID, 800);
+  </script>
+</head>
+
+<body>
+
+<header>
+  <h1>Milk Dispense</h1>
+  <p>Quality‑based pricing system</p>
+</header>
+
+<div class="container">
+
+  <div class="nav">
+    <a href="/">Home</a>
+    <a href="/ui/recharge">Recharge</a>
+    <a href="/transactions">History</a>
+  </div>
+
+  <div class="card">
+    <form method="POST" action="/milk">
+
+      <label>RFID Card</label>
+      <input
+        id="uid"
+        name="uid"
+        placeholder="Scan your card"
+        readonly
+        required
+      >
+
+      <label>Volume (Litres)</label>
+      <input type="number" step="0.1" name="volume" required>
+
+      <label>SNF</label>
+      <input type="number" step="0.1" name="snf" required>
+
+      <label>Water Content</label>
+      <input type="number" step="0.1" name="water" required>
+
+      <button type="submit">Dispense Milk</button>
+    </form>
+  </div>
+
+</div>
+
+</body>
+</html>
