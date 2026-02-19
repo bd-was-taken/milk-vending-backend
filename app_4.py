@@ -6,6 +6,7 @@ import mysql.connector
 app = Flask(__name__)
 
 # ================= CONFIGURATION =================
+# TiDB connection details. Render Environment variables will override these if set.
 DB_HOST = os.environ.get("DB_HOST", "gateway01.ap-southeast-1.prod.aws.tidbcloud.com") 
 DB_USER = os.environ.get("DB_USER", "2smpUV5w6ViQjKx.root")
 DB_PASSWORD = os.environ.get("DB_PASSWORD", "LHq7rRwOBrVkhQDb")
@@ -13,8 +14,10 @@ DB_NAME = os.environ.get("DB_NAME", "test")
 DB_PORT = int(os.environ.get("DB_PORT", 4000)) 
 
 # ================= STATE MANAGEMENT =================
+# Stores the most recently scanned card for the Web UI
 latest_uid = ""
-# 🔥 THIS WAS MISSING! This holds the volume waiting for the ESP32
+
+# 🔥 THE HARDWARE QUEUE: Stores volumes waiting for ESP 2 to pull
 pending_dispenses = {}  
 
 # ================= DATABASE ===================
@@ -37,33 +40,36 @@ def get_db_connection():
 @app.route("/")
 def home():
     global latest_uid
-    latest_uid = ""   
+    latest_uid = ""   # Clear the UI on home
     return render_template("index.html")
 
-# ================= RFID APIs (Hardware <-> Web UI) ==================
+# ================= RFID APIs (Web UI <-> ESP 1) ==================
 @app.route("/api/rfid", methods=["POST"])
 def receive_rfid():
     global latest_uid
     data = request.get_json()
     latest_uid = data.get("uid", "")
-    print("RFID RECEIVED:", latest_uid)
+    print("💳 RFID RECEIVED FROM ESP 1:", latest_uid)
     return {"status": "ok"}
 
 @app.route("/api/rfid/latest")
 def get_latest_rfid():
     return jsonify({"uid": latest_uid})
 
-# 🔥 THIS WAS MISSING! ESP32 polls this waiting for the web operator
-@app.route("/api/check_dispense", methods=["GET"])
-def check_dispense():
-    uid = request.args.get("uid")
-    if not uid:
-        return jsonify({"status": "error"}), 400
-
-    if uid in pending_dispenses:
+# ================= DISPENSER API (Web <-> ESP 2) =================
+@app.route("/api/dispenser/pull", methods=["GET"])
+def dispenser_pull():
+    """
+    ESP 2 constantly polls this URL. If a job is here, it grabs it 
+    and removes it from the queue so it doesn't double-pour!
+    """
+    if pending_dispenses:
+        # Grab the first job in the queue
+        uid = list(pending_dispenses.keys())[0]
         vol = pending_dispenses.pop(uid) 
-        print(f"🚀 Instructing ESP to dispense {vol}mL for {uid}")
-        return jsonify({"status": "dispense", "volume": vol})
+        
+        print(f"🥛 ESP 2 Pulled Job: {vol}mL for {uid}")
+        return jsonify({"status": "dispense", "uid": uid, "volume": vol})
     
     return jsonify({"status": "waiting"})
 
@@ -81,6 +87,7 @@ def milk_billing():
     snf = float(request.form["snf"])
     water = float(request.form["water"])
 
+    # Basic pricing logic
     rate = 40
     if snf >= 8.5:
         rate += 2
@@ -105,11 +112,13 @@ def milk_billing():
 
     new_balance = float(user["balance"]) - total
 
+    # Deduct balance
     cur.execute(
         "UPDATE users SET balance=%s WHERE uid=%s",
         (new_balance, uid)
     )
 
+    # Log transaction
     cur.execute("""
         INSERT INTO transactions
         (uid, volume, snf, water, rate, total, timestamp)
@@ -119,9 +128,10 @@ def milk_billing():
     conn.commit()
     conn.close()
 
-    # 🔥 THIS WAS MISSING! Add to queue so ESP32 knows to start pumping
-    pending_dispenses[uid] = volume  
+    # 🔥 ADD TO QUEUE: Tell ESP 2 it is authorized to pump!
+    pending_dispenses[uid] = int(volume)  
 
+    # Clear the UI
     latest_uid = ""   
 
     return redirect(url_for("transactions_page"))
@@ -146,6 +156,7 @@ def recharge():
             (amount, uid)
         )
     else:
+        # Auto-create new user
         cur.execute(
             "INSERT INTO users (uid, balance, name) VALUES (%s, %s, %s)",
             (uid, amount, "Unknown User")
@@ -193,5 +204,6 @@ def users_page():
 
 # ================= RUN ========================
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT",10000))
+    port = int(os.environ.get("PORT", 10000))
+    # Using 0.0.0.0 is required for Render to expose the port
     app.run(host="0.0.0.0", port=port)
