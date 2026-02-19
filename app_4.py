@@ -186,7 +186,6 @@ def users_page():
 # ================= RUN ========================
 if __name__ == "__main__":
     # Debug=True is fine for local testing, but Gunicorn will override this on Render
-
-    app.run(debug=True)
     port = int(os.environ.get("PORT",10000))
     app.run(host="0.0.0.0", port=port)
+
