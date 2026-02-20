@@ -17,6 +17,14 @@
         });
     }
     setInterval(fetchRFID, 800);
+
+    function selectVolume(volume) {
+      const buttons = document.querySelectorAll('.volume-button');
+      buttons.forEach(button => button.classList.remove('selected'));
+      event.target.classList.add('selected');
+
+      document.querySelector('input[name="volume"]').value = volume / 1000; // Convert mL to L
+    }
   </script>
 </head>
 
@@ -49,9 +57,9 @@
 
       <label>Volume</label>
       <div style="display: flex; gap: 10px;">
-        <button type="button" onclick="selectVolume('250')">250mL</button>
-        <button type="button" onclick="selectVolume('500')">500mL</button>
-        <button type="button" onclick="selectVolume('1000')">1L</button>
+        <button type="button" onclick="selectVolume(250)" class="volume-button">250mL</button>
+        <button type="button" onclick="selectVolume(500)" class="volume-button">500mL</button>
+        <button type="button" onclick="selectVolume(1000)" class="volume-button">1L</button>
       </div>
 
       <label>SNF</label>
@@ -68,6 +76,10 @@
 
 <script>
   function selectVolume(volume) {
+    const buttons = document.querySelectorAll('.volume-button');
+    buttons.forEach(button => button.classList.remove('selected'));
+    event.target.classList.add('selected');
+
     document.querySelector('input[name="volume"]').value = volume / 1000; // Convert mL to L
   }
 </script>
