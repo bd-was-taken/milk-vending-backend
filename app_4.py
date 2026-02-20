@@ -5,17 +5,18 @@ import mysql.connector
 
 app = Flask(__name__)
 
-# ================= CONFIGURATION (FILL THIS!) =================
-# If you are running locally, paste your TiDB details here.
-# If you are on Render, add these as Environment Variables in the dashboard.
+# ================= CONFIGURATION =================
 DB_HOST = os.environ.get("DB_HOST", "gateway01.ap-southeast-1.prod.aws.tidbcloud.com") 
 DB_USER = os.environ.get("DB_USER", "2smpUV5w6ViQjKx.root")
 DB_PASSWORD = os.environ.get("DB_PASSWORD", "LHq7rRwOBrVkhQDb")
-DB_NAME = os.environ.get("DB_NAME", "test") # Usually 'test' for TiDB free tier
-DB_PORT = int(os.environ.get("DB_PORT", 4000)) # TiDB uses 4000, not 3306
+DB_NAME = os.environ.get("DB_NAME", "test") 
+DB_PORT = int(os.environ.get("DB_PORT", 4000)) 
 
-# ================= RFID STATE =================
+# ================= STATE & HARDWARE QUEUE =================
 latest_uid = ""
+
+# 🔥 This stores volumes (IN MILLILITERS) waiting for ESP 2 to pull
+pending_dispenses = {}  
 
 # ================= DATABASE ===================
 def get_db_connection():
@@ -26,20 +27,18 @@ def get_db_connection():
             password=DB_PASSWORD,
             database=DB_NAME,
             port=DB_PORT,
-            # TiDB requires SSL. This ensures it connects securely.
             ssl_disabled=False 
         )
         return connection
     except mysql.connector.Error as err:
         print(f"❌ DATABASE CONNECTION ERROR: {err}")
-        print("Did you paste the correct Host/User/Password in app_4.py?")
         raise err
 
 # ================= HOME =======================
 @app.route("/")
 def home():
     global latest_uid
-    latest_uid = ""   # 🔥 CLEAR RFID ON HOME
+    latest_uid = ""   
     return render_template("index.html")
 
 # ================= RFID APIs ==================
@@ -55,7 +54,19 @@ def receive_rfid():
 def get_latest_rfid():
     return jsonify({"uid": latest_uid})
 
-# ================= MILK =======================
+# ================= DISPENSER API (Hardware Pull) =================
+@app.route("/api/dispenser/pull", methods=["GET"])
+def dispenser_pull():
+    """ESP 2 constantly polls this URL. Jobs here are already in mL."""
+    if pending_dispenses:
+        uid = list(pending_dispenses.keys())[0]
+        vol_ml = pending_dispenses.pop(uid) 
+        print(f"🥛 ESP 2 Pulled Job: {vol_ml}mL for {uid}")
+        return jsonify({"status": "dispense", "uid": uid, "volume": vol_ml})
+    
+    return jsonify({"status": "waiting"})
+
+# ================= MILK BILLING & DISPENSE =======================
 @app.route("/ui/milk")
 def milk_page():
     return render_template("milk.html")
@@ -65,22 +76,29 @@ def milk_billing():
     global latest_uid
 
     uid = request.form["uid"]
-    volume = float(request.form["volume"])
+    volume_liters = float(request.form["volume"]) # Read as Liters
     snf = float(request.form["snf"])
     water = float(request.form["water"])
 
-    rate = 40
-    if snf >= 8.5:
-        rate += 2
-    if water > 2:
-        rate -= 2
+    # --- DYNAMIC PRICING FORMULA ---
+    base_rate = 40.0 
+    
+    # SNF factor: +4 rupees for every point above 8.5, -4 for every point below
+    snf_adjustment = (snf - 8.5) * 4.0 
+    
+    # Water factor: -2 rupees for every 1% of water
+    water_penalty = water * 2.0 
+    
+    # Calculate final rate, but never let it drop below 15 rupees/Liter
+    calculated_rate = base_rate + snf_adjustment - water_penalty
+    rate = max(15.0, calculated_rate)
 
-    total = rate * volume
+    total = rate * volume_liters
+    # -------------------------------
 
     conn = get_db_connection()
     cur = conn.cursor(dictionary=True)
 
-    # Check User Balance
     cur.execute("SELECT balance FROM users WHERE uid=%s", (uid,))
     user = cur.fetchone()
 
@@ -100,17 +118,21 @@ def milk_billing():
         (new_balance, uid)
     )
 
-    # Record Transaction
+    # Record Transaction (Saved in Liters)
     cur.execute("""
         INSERT INTO transactions
         (uid, volume, snf, water, rate, total, timestamp)
         VALUES (%s, %s, %s, %s, %s, %s, %s)
-    """, (uid, volume, snf, water, rate, total, datetime.now()))
+    """, (uid, volume_liters, snf, water, rate, total, datetime.now()))
 
     conn.commit()
     conn.close()
 
-    latest_uid = ""   # 🔥 CLEAR AFTER SUCCESS
+    # 🔥 ADD TO QUEUE FOR ESP32 (Convert Liters to mL)
+    volume_ml = int(volume_liters * 1000)
+    pending_dispenses[uid] = volume_ml  
+
+    latest_uid = ""   
 
     return redirect(url_for("transactions_page"))
 
@@ -127,7 +149,6 @@ def recharge():
     conn = get_db_connection()
     cur = conn.cursor()
 
-    # Check if user exists, if so update, else create
     cur.execute("SELECT uid FROM users WHERE uid=%s", (uid,))
     if cur.fetchone():
         cur.execute(
@@ -135,7 +156,6 @@ def recharge():
             (amount, uid)
         )
     else:
-        # Create new user if they don't exist yet (Auto-Registration)
         cur.execute(
             "INSERT INTO users (uid, balance, name) VALUES (%s, %s, %s)",
             (uid, amount, "Unknown User")
@@ -171,13 +191,11 @@ def transactions_page():
 
     return render_template("transactions.html", rows=rows)
 
-
 # ================= USERS ======================
 @app.route("/ui/users")
 def users_page():
     conn = get_db_connection()
     cur = conn.cursor()
-    # Fetches UID, Balance, and Name from the users table
     cur.execute("SELECT uid, balance, name FROM users")
     all_users = cur.fetchall()
     conn.close()
@@ -185,7 +203,5 @@ def users_page():
 
 # ================= RUN ========================
 if __name__ == "__main__":
-    # Debug=True is fine for local testing, but Gunicorn will override this on Render
     port = int(os.environ.get("PORT",10000))
     app.run(host="0.0.0.0", port=port)
-
