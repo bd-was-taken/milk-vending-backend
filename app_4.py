@@ -12,10 +12,10 @@ DB_PASSWORD = os.environ.get("DB_PASSWORD", "LHq7rRwOBrVkhQDb")
 DB_NAME = os.environ.get("DB_NAME", "test") 
 DB_PORT = int(os.environ.get("DB_PORT", 4000)) 
 
-# ================= STATE & HARDWARE QUEUE =================
+# ================= STATE =================
 latest_uid = ""
 
-# 🔥 This stores volumes (IN MILLILITERS) waiting for ESP 2 to pull
+# 🔥 HARDWARE QUEUE: Stores exact volume waiting for ESP 2 to pull
 pending_dispenses = {}  
 
 # ================= DATABASE ===================
@@ -54,19 +54,19 @@ def receive_rfid():
 def get_latest_rfid():
     return jsonify({"uid": latest_uid})
 
-# ================= DISPENSER API (Hardware Pull) =================
+# ================= DISPENSER API (Hardware) =================
 @app.route("/api/dispenser/pull", methods=["GET"])
 def dispenser_pull():
-    """ESP 2 constantly polls this URL. Jobs here are already in mL."""
+    """ESP 2 constantly polls this URL. Passes volume EXACTLY as queued."""
     if pending_dispenses:
         uid = list(pending_dispenses.keys())[0]
-        vol_ml = pending_dispenses.pop(uid) 
-        print(f"🥛 ESP 2 Pulled Job: {vol_ml}mL for {uid}")
-        return jsonify({"status": "dispense", "uid": uid, "volume": vol_ml})
+        vol = pending_dispenses.pop(uid) 
+        print(f"🥛 ESP 2 Pulled Job: {vol} units for {uid}")
+        return jsonify({"status": "dispense", "uid": uid, "volume": vol})
     
     return jsonify({"status": "waiting"})
 
-# ================= MILK BILLING & DISPENSE =======================
+# ================= MILK =======================
 @app.route("/ui/milk")
 def milk_page():
     return render_template("milk.html")
@@ -76,24 +76,20 @@ def milk_billing():
     global latest_uid
 
     uid = request.form["uid"]
-    volume_liters = float(request.form["volume"]) # Read as Liters
+    volume = float(request.form["volume"]) 
     snf = float(request.form["snf"])
     water = float(request.form["water"])
 
     # --- DYNAMIC PRICING FORMULA ---
-    base_rate = 40.0 
+    # Base 40, +4 for every SNF point above 8.5, -2 for every 1% water
+    rate = 40.0 + ((snf - 8.5) * 4.0) - (water * 2.0)
     
-    # SNF factor: +4 rupees for every point above 8.5, -4 for every point below
-    snf_adjustment = (snf - 8.5) * 4.0 
-    
-    # Water factor: -2 rupees for every 1% of water
-    water_penalty = water * 2.0 
-    
-    # Calculate final rate, but never let it drop below 15 rupees/Liter
-    calculated_rate = base_rate + snf_adjustment - water_penalty
-    rate = max(15.0, calculated_rate)
+    # Ensure rate never drops below 15
+    rate = max(15.0, rate)
 
-    total = rate * volume_liters
+    # Note: If your volume input is in mL (e.g., 500) and the rate is per Liter, 
+    # you may need to change this to: total = rate * (volume / 1000)
+    total = rate * volume
     # -------------------------------
 
     conn = get_db_connection()
@@ -112,25 +108,22 @@ def milk_billing():
 
     new_balance = float(user["balance"]) - total
 
-    # Update Balance
     cur.execute(
         "UPDATE users SET balance=%s WHERE uid=%s",
         (new_balance, uid)
     )
 
-    # Record Transaction (Saved in Liters)
     cur.execute("""
         INSERT INTO transactions
         (uid, volume, snf, water, rate, total, timestamp)
         VALUES (%s, %s, %s, %s, %s, %s, %s)
-    """, (uid, volume_liters, snf, water, rate, total, datetime.now()))
+    """, (uid, volume, snf, water, rate, total, datetime.now()))
 
     conn.commit()
     conn.close()
 
-    # 🔥 ADD TO QUEUE FOR ESP32 (Convert Liters to mL)
-    volume_ml = int(volume_liters * 1000)
-    pending_dispenses[uid] = volume_ml  
+    # 🔥 ADD TO QUEUE (Exact value, no multiplication)
+    pending_dispenses[uid] = int(volume)  
 
     latest_uid = ""   
 
