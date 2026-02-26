@@ -29,21 +29,17 @@
     }
 
     /* Bring the container up higher */
-    /* ... other styles from milk.html ... */
-
-.container {
-  max-width: 420px;
-  margin: 25vh auto auto auto; /* Keeps the card nicely pushed down */
-  padding: 20px;
-  
-  /* ============================================================ */
-  /* BUG FIX: FORCES CARD OVER COW                                */
-  /* ============================================================ */
-  position: relative; /* z-index requires specified positioning */
-  z-index: 10;        /* Make higher than cow (e.g., standard flow is 0) */
-}
-
-/* ... other styles remain unchanged ... */
+    .container {
+      max-width: 420px;
+      margin: 25vh auto auto auto; /* Keeps the card nicely pushed down */
+      padding: 20px;
+      
+      /* ============================================================ */
+      /* BUG FIX: FORCES CARD OVER COW                                */
+      /* ============================================================ */
+      position: relative; /* z-index requires specified positioning */
+      z-index: 10;        /* Make higher than cow (e.g., standard flow is 0) */
+    }
 
     /* Shrink the Navigation */
     .nav {
@@ -257,7 +253,18 @@
     </div>
 
   </div>
+
+  <script>
+    document.querySelector("form").addEventListener("submit", function(event) {
+        let uidInput = document.getElementById("uid").value.trim();
+        
+        // If it's empty, block the submit and alert the user
+        if (uidInput === "" || uidInput === "None") {
+            event.preventDefault(); // Stops the form from sending
+            alert("⚠️ Please scan an RFID card first!");
+        }
+    });
+  </script>
+
 </body>
 </html>
-
-
