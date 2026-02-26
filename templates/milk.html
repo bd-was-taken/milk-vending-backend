@@ -4,6 +4,177 @@
   <title>Milk Dispense</title>
   <link rel="stylesheet" href="/static/apple.css">
 
+  <style>
+    /* ============================================================
+       PAGE-SPECIFIC STYLES
+       ============================================================ */
+    
+    /* Ensure the body doesn't scroll if we can help it */
+    body {
+      overflow-y: hidden; /* Prevents vertical scrolling */
+    }
+
+    /* Shrink the header spacing so it takes up less vertical room */
+    header {
+      padding: 15px 20px 5px 20px !important; 
+    }
+    
+    header h1 {
+      margin: 0 0 5px 0 !important;
+      font-size: 2.2rem !important;
+    }
+    
+    header p {
+      margin: 0 !important;
+      font-size: 1rem !important;
+    }
+
+    /* Bring the container up higher */
+    /* ... other styles from milk.html ... */
+
+.container {
+  max-width: 420px;
+  margin: 25vh auto auto auto; /* Keeps the card nicely pushed down */
+  padding: 20px;
+  
+  /* ============================================================ */
+  /* BUG FIX: FORCES CARD OVER COW                                */
+  /* ============================================================ */
+  position: relative; /* z-index requires specified positioning */
+  z-index: 10;        /* Make higher than cow (e.g., standard flow is 0) */
+}
+
+/* ... other styles remain unchanged ... */
+
+    /* Shrink the Navigation */
+    .nav {
+      text-align: center;
+      margin-bottom: 10px; /* Reduced from 24px */
+      font-size: 18px;     /* Reduced from 24px */
+    }
+    
+    .nav a {
+      color: #ffffff;
+      text-decoration: none;
+      text-shadow: 2px 2px 0px #5c3a21, -1px -1px 0px #5c3a21, 1px -1px 0px #5c3a21, -1px 1px 0px #5c3a21;
+      padding: 0 5px;
+      transition: color 0.1s;
+    }
+    
+    .nav a:hover {
+      color: #ffdf4f; 
+    }
+
+    .nav span {
+      color: #7d4e24; 
+    }
+
+    /* Make the card padding smaller so the form fits */
+    .card {
+      padding: 20px 30px !important; /* Reduced top/bottom padding */
+    }
+
+    /* Shrink Form Labels and Inputs */
+    form label {
+      display: block;
+      text-align: left;
+      font-size: 16px; /* Reduced from 20px */
+      color: #7d4e24; 
+      margin-top: 8px; /* Reduced from 16px */
+      margin-bottom: 2px;
+    }
+    
+    form label:first-child {
+      margin-top: 0;
+    }
+    
+    /* Make inputs slightly less tall */
+    input {
+      padding: 8px !important;
+      margin-bottom: 5px !important;
+    }
+
+    /* ============================================================
+       LIQUID GLASS BUTTONS 
+       ============================================================ */
+    .button-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 5px;
+    }
+    
+    /* The Glass Effect */
+    .liquid-glass-btn {
+      position: relative;
+      flex: 1;
+      padding: 8px 10px; /* Thinner padding */
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: bold;
+      color: #1a4b8c; 
+      cursor: pointer;
+      overflow: hidden;
+      
+      background: rgba(255, 255, 255, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      border-radius: 12px; /* Slightly rounder */
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      
+      box-shadow: 
+          0 4px 10px 0 rgba(31, 38, 135, 0.1),
+          inset 0 2px 2px rgba(255, 255, 255, 0.8);
+          
+      transition: all 0.3s ease-in-out;
+    }
+
+    .liquid-glass-btn:hover {
+      background: rgba(255, 255, 255, 0.5);
+      box-shadow: 
+          0 6px 15px 0 rgba(31, 38, 135, 0.2),
+          inset 0 4px 4px rgba(255, 255, 255, 1);
+      transform: translateY(-2px);
+    }
+
+    /* The Shiny Glare */
+    .liquid-glass-btn::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 50%;
+      height: 100%;
+      background: linear-gradient(
+          to right, 
+          rgba(255, 255, 255, 0) 0%, 
+          rgba(255, 255, 255, 0.6) 50%, 
+          rgba(255, 255, 255, 0) 100%
+      );
+      transform: skewX(-25deg);
+      transition: left 0.5s ease;
+    }
+
+    .liquid-glass-btn:hover::before {
+      left: 150%;
+    }
+
+    /* Style the main submit button slightly larger */
+    .submit-btn {
+      width: 100%;
+      margin-top: 15px; /* Reduced from 32px */
+      padding: 12px !important; 
+      font-size: 1.1rem !important;
+      background: rgba(50, 150, 255, 0.4); /* Blue tint for the main button */
+      color: white;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+    }
+    
+    .submit-btn:hover {
+       background: rgba(50, 150, 255, 0.6);
+    }
+
+  </style>
+
   <script>
     function fetchRFID() {
       fetch("/api/rfid/latest")
@@ -15,50 +186,83 @@
         });
     }
     setInterval(fetchRFID, 800);
+
+    function setVolume(liters) {
+      document.getElementById('volume_input').value = liters;
+    }
   </script>
 </head>
 
 <body>
 
-<header>
-  <h1>Milk Dispense</h1>
-  <p>Quality‑based pricing system</p>
-</header>
-
-<div class="container">
-
-  <div class="nav">
-    <a href="/">Home</a>
-    <a href="/ui/recharge">Recharge</a>
-    <a href="/transactions">History</a>
+  <div class="cow-container">
+    <div class="walking-cow"></div>
   </div>
 
-  <div class="card">
-    <form method="POST" action="/milk">
+  <header>
+    <h1>Milk Dispense</h1>
+    <p>Quality-based pricing system</p>
+  </header>
 
-      <label>RFID Card</label>
-      <input
-        id="uid"
-        name="uid"
-        placeholder="Scan your card"
-        readonly
-        required
-      >
+  <div class="container" style="max-width: 500px;">
 
-      <label>Volume (Litres)</label>
-      <input type="number" step="0.1" name="volume" required>
+    <div class="nav">
+      <a href="/">Home</a> <span>|</span> 
+      <a href="/ui/recharge">Recharge</a> <span>|</span> 
+      <a href="/transactions">History</a>
+    </div>
 
-      <label>SNF</label>
-      <input type="number" step="0.1" name="snf" required>
+    <div class="card">
+      <form method="POST" action="/milk">
 
-      <label>Water Content</label>
-      <input type="number" step="0.1" name="water" required>
+        <label>RFID Card</label>
+        <input
+          id="uid"
+          name="uid"
+          placeholder="Waiting for card scan..."
+          readonly
+          required
+        >
 
-      <button type="submit">Dispense Milk</button>
-    </form>
+        <label>Quick Select Volume</label>
+        <div class="button-row">
+          <button type="button" class="liquid-glass-btn" onclick="setVolume(0.25)">250 mL</button>
+          <button type="button" class="liquid-glass-btn" onclick="setVolume(0.5)">500 mL</button>
+          <button type="button" class="liquid-glass-btn" onclick="setVolume(1.0)">1 L</button>
+        </div>
+
+        <label>Volume (Litres)</label>
+        <input 
+          type="number" 
+          step="0.01" 
+          name="volume" 
+          id="volume_input" 
+          placeholder="0.00" 
+          required
+        >
+
+        <label>SNF</label>
+        <input 
+          type="number" 
+          step="0.1" 
+          name="snf" 
+          required
+        >
+
+        <label>Water Content (%)</label>
+        <input 
+          type="number" 
+          step="0.1" 
+          name="water" 
+          required
+        >
+
+        <button type="submit" class="liquid-glass-btn submit-btn">
+          Dispense Milk
+        </button>
+      </form>
+    </div>
+
   </div>
-
-</div>
-
 </body>
 </html>
