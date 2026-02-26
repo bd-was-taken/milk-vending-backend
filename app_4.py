@@ -74,6 +74,10 @@ def dispenser_pull():
     return jsonify({"status": "waiting"})
 
 # ================= MILK =======================
+# ================= MILK UI =======================
+@app.route("/ui/milk")
+def milk_page():
+    return render_template("milk.html")
 @app.route("/milk", methods=["POST"])
 def milk_billing():
     global latest_uid
@@ -212,4 +216,5 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     # Using 0.0.0.0 is required for Render to expose the port
     app.run(host="0.0.0.0", port=port)
+
 
