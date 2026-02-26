@@ -1,103 +1,252 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap");
+/* Load your custom Stardew Valley font */
+@font-face {
+  font-family: 'Stardew';
+  /* Make sure this path matches where your font file is stored! */
+  src: url('/static/fonts/stardew_valley.ttf') format('truetype'); 
+}
 
 * {
   box-sizing: border-box;
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  /* Apply the custom font everywhere, fallback to a chunky monospace if it fails */
+  font-family: "Stardew", "Stardew Valley Regular", "Courier New", monospace;
 }
 
 body {
   margin: 0;
-  background: #f5f5f7;
-  color: #1d1d1f;
+  padding: 0;
+  min-height: 100vh;
+  /* Deep earthy brown text */
+  color: #3e2723; 
+  
+  /* Your pixel-art background */
+  background-image: url('/static/images/background.png');
+  background-repeat: no-repeat;
+  background-size: 100vw 100vh; 
+  background-attachment: fixed;
+  /* Turn off anti-aliasing for background to keep pixels crisp (optional) */
+  image-rendering: pixelated; 
 }
 
+/* Header Text - Stardew Valley Title Screen Effect */
 header {
   text-align: center;
   padding: 40px 20px 20px;
 }
 
 header h1 {
-  font-size: 32px;
-  font-weight: 600;
+  font-size: 64px; /* Scaled up to feel more like a main game logo */
+  font-weight: normal;
   margin-bottom: 8px;
+  letter-spacing: 3px;
+  
+  /* The vibrant Stardew Gold base color */
+  color: #ffdf4f; 
+  
+  /* The chunky pixel-art outline and 3D shadow */
+  text-shadow: 
+    2px 0 0 #4a2e15, 
+    -2px 0 0 #4a2e15, 
+    0 2px 0 #4a2e15, 
+    0 -2px 0 #4a2e15, 
+    2px 2px 0 #4a2e15, 
+    -2px -2px 0 #4a2e15, 
+    2px -2px 0 #4a2e15, 
+    -2px 2px 0 #4a2e15,
+    /* The 3D Extrusion pointing down and right */
+    4px 4px 0 #2e1a0b,
+    5px 5px 0 #2e1a0b;
 }
 
 header p {
-  color: #6e6e73;
-  font-size: 16px;
+  font-size: 26px;
+  letter-spacing: 1px;
+  color: #ffffff; /* Crisp white for subtitle */
+  
+  /* A slightly thinner outline and shadow for the smaller font */
+  text-shadow: 
+    2px 0 0 #4a2e15, 
+    -2px 0 0 #4a2e15, 
+    0 2px 0 #4a2e15, 
+    0 -2px 0 #4a2e15,
+    3px 3px 0 #2e1a0b;
 }
 
 .container {
   max-width: 420px;
-  margin: auto;
+  margin: 25vh auto auto auto; /* Keeps the card nicely pushed down */
   padding: 20px;
 }
 
-.nav {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 20px;
-}
-
-.nav a {
-  text-decoration: none;
-  color: #0071e3;
-  font-weight: 500;
-}
-
+/* The Main Card - Styled like a Stardew UI Menu (Parchment & Wood) */
 .card {
-  background: white;
-  border-radius: 18px;
-  padding: 24px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+  background: #f4e4c1; /* Soft parchment/menu color */
+  border: 6px solid #7d4e24; /* Thick wooden border */
+  border-radius: 8px; /* Blocky corners, not perfectly round */
+  padding: 32px 24px;
+  
+  /* Sharp, non-blurred shadow to mimic pixel art UI */
+  box-shadow: 6px 6px 0px rgba(0, 0, 0, 0.4), inset 2px 2px 0px #fff7e0, inset -2px -2px 0px #d4b886;
 }
 
-label {
-  display: block;
-  margin-top: 16px;
-  font-size: 14px;
-  color: #6e6e73;
-}
-
+/* Input Fields - Deep inset look */
 input {
   width: 100%;
   margin-top: 6px;
   padding: 12px;
-  border-radius: 12px;
-  border: 1px solid #d2d2d7;
-  font-size: 16px;
+  background: #fff9e6;
+  border: 4px solid #5c3a21;
+  border-radius: 4px;
+  font-size: 20px;
+  color: #3e2723;
+  box-shadow: inset 2px 2px 0px rgba(0,0,0,0.2);
 }
 
 input:focus {
   outline: none;
-  border-color: #0071e3;
+  background: #ffffff;
+  border-color: #d37a2a; /* Highlights to a warmer orange-brown */
 }
 
+/* Wood Plank Buttons */
 button {
   margin-top: 24px;
   width: 100%;
-  background: #0071e3;
-  color: white;
-  border: none;
+  background: #d37a2a; /* Warm wood/clay color */
+  color: #fff;
+  border: 4px solid #5c3a21;
   padding: 14px;
-  border-radius: 14px;
-  font-size: 16px;
-  font-weight: 500;
+  border-radius: 6px;
+  font-size: 24px;
   cursor: pointer;
+  text-transform: uppercase;
+  text-shadow: 1px 1px 0px #5c3a21;
+  
+  /* Creates a chunky, 3D pixel-art bevel */
+  box-shadow: inset 3px 3px 0px #ea9e5a, inset -3px -3px 0px #a15919, 4px 4px 0px rgba(0,0,0,0.3);
+  transition: transform 0.1s;
 }
 
 button:hover {
-  background: #0077ed;
+  background: #ea9e5a;
 }
 
-
-.nav.compact {
-  display: flex;
-  justify-content: center;
-  gap: 24px;
-  margin-bottom: 24px;
+button:active {
+  transform: translate(2px, 2px);
+  box-shadow: inset 3px 3px 0px #a15919, inset -3px -3px 0px #ea9e5a, 0px 0px 0px rgba(0,0,0,0);
 }
 
-.nav a.active {
-  font-weight: 600;
+/* RFID Scan Ring - Chunky and earthy */
+.scan-ring {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  border: 6px dashed #d37a2a; /* Dashed border for a more rustic feel */
+  margin: 20px auto 40px auto;
+  animation: pulseChunky 1.5s steps(3) infinite; /* steps() makes the animation feel like retro frames */
+}
+
+@keyframes pulseChunky {
+  0% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.1); opacity: 1; border-color: #ffda75; }
+  100% { transform: scale(1); opacity: 0.8; }
+}
+
+.detected {
+  animation: none;
+  background: #8bcc60; /* Stardew Valley stamina bar green */
+  border: 6px solid #5c3a21;
+  box-shadow: inset 4px 4px 0px #a9ea78, inset -4px -4px 0px #5e993b;
+}
+
+/* Typography styles for card interior */
+.value {
+  font-size: 28px;
+  font-weight: normal;
+  margin-bottom: 8px;
+  text-align: center;
+  color: #3e2723; /* Keeps dark brown on the parchment */
+}
+
+.label {
+  font-size: 18px;
+  color: #7d4e24;
+  text-align: center;
+}
+
+/* Cow Animation (Unchanged) */
+.walking-cow {
+  position: fixed;
+  bottom: 62%; 
+  left: -150px;
+  width: 100px; 
+  height: 80px; 
+  z-index: 5; 
+  pointer-events: none; 
+  image-rendering: pixelated; 
+  
+  background-image: url('/static/images/white_cow_walking-ezgif.com-gif-to-sprite-converter.png');
+  background-size: 600% 100%; 
+  background-repeat: no-repeat;
+  
+  /* CHANGED: Doubled both times to make her walk exactly half as fast! */
+  animation: 
+    syncWalk 40.8s linear infinite,          
+    animateSprite 4.08s step-end infinite;   
+}
+
+/* The Sprite Frames (Calculated to your exact EZGif delays) 
+  step-end holds the image perfectly still until the exact moment of the next percentage 
+*/
+@keyframes animateSprite {
+  0%      { background-position: 0% 0; }    /* Frame 1: 0ms */
+  14.7%   { background-position: 20% 0; }   /* Frame 2: 300ms */
+  29.4%   { background-position: 40% 0; }   /* Frame 3: 600ms */
+  44.1%   { background-position: 60% 0; }   /* Frame 4: 900ms */
+  58.8%   { background-position: 80% 0; }   /* Frame 5 (Graze): 1200ms */
+  83.3%   { background-position: 100% 0; }  /* Frame 6 (Graze): 1700ms */
+  100%    { background-position: 100% 0; }  /* 2040ms loop resets */
+}
+
+/* The exact same perfect math from before, now permanently locked in sync */
+@keyframes syncWalk {
+  /* Step 1 */
+  0%     { transform: translateX(0); }
+  5.88%  { transform: translateX(12vw); }
+  10%    { transform: translateX(12vw); }
+
+  /* Step 2 */
+  15.88% { transform: translateX(24vw); }
+  20%    { transform: translateX(24vw); }
+
+  /* Step 3 */
+  25.88% { transform: translateX(36vw); }
+  30%    { transform: translateX(36vw); }
+
+  /* Step 4 */
+  35.88% { transform: translateX(48vw); }
+  40%    { transform: translateX(48vw); }
+
+  /* Step 5 */
+  45.88% { transform: translateX(60vw); }
+  50%    { transform: translateX(60vw); }
+
+  /* Step 6 */
+  55.88% { transform: translateX(72vw); }
+  60%    { transform: translateX(72vw); }
+
+  /* Step 7 */
+  65.88% { transform: translateX(84vw); }
+  70%    { transform: translateX(84vw); }
+
+  /* Step 8 */
+  75.88% { transform: translateX(96vw); }
+  80%    { transform: translateX(96vw); }
+
+  /* Step 9 */
+  85.88% { transform: translateX(108vw); }
+  90%    { transform: translateX(108vw); }
+
+  /* Step 10 */
+  95.88% { transform: translateX(120vw); } 
+  100%   { transform: translateX(120vw); }
 }
