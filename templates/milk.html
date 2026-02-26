@@ -3,7 +3,6 @@
 <head>
   <title>Milk Dispense</title>
   <link rel="stylesheet" href="/static/apple.css">
-  <input type="text" id="uid" name="uid" value="{{ scanned_uid }}" readonly required>
   <style>
     /* ============================================================
        PAGE-SPECIFIC STYLES
@@ -216,13 +215,7 @@
       <form method="POST" action="/milk">
 
         <label>RFID Card</label>
-        <input
-          id="uid"
-          name="uid"
-          placeholder="Waiting for card scan..."
-          readonly
-          required
-        >
+        <input type="text" id="uid" name="uid" value="{{ scanned_uid }}" readonly required>
 
         <label>Quick Select Volume</label>
         <div class="button-row">
@@ -266,4 +259,5 @@
   </div>
 </body>
 </html>
+
 
