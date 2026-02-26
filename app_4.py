@@ -84,9 +84,9 @@ def milk_page():
 def milk_billing():
     global latest_uid
 
-    # 1. Capture Inputs
+    # 1. Capture Inputs (Now grabbing LITERS from the form)
     uid = request.form["uid"]
-    volume_ml = float(request.form["volume"])
+    volume_l = float(request.form["volume"]) # 🔥 Changed to expect Liters
     snf = float(request.form["snf"])
     water = float(request.form["water"])
 
@@ -95,13 +95,15 @@ def milk_billing():
     RATE_WATER_COEFF = 2.5 
     MINIMUM_RATE = 10.0   # Floor price per Liter to cover overhead
 
-    # 3. CALCULATE RATE & VOLUME
+    # 3. CALCULATE RATE & TOTAL PRICE
     dynamic_rate = (snf * RATE_SNF_COEFF) - (water * RATE_WATER_COEFF)
     rate_per_liter = max(dynamic_rate, MINIMUM_RATE)
 
-    # Convert mL to Liters for the final billing math
-    volume_l = volume_ml / 1000.0 
+    # Calculate total directly from the Liters input
     total = rate_per_liter * volume_l
+
+    # Convert Liters back to mL for the Hardware and Database
+    volume_ml = volume_l * 1000.0 
 
     # 4. DATABASE OPERATIONS
     conn = get_db_connection()
@@ -126,7 +128,7 @@ def milk_billing():
         (new_balance, uid)
     )
 
-    # Log transaction (Storing volume_ml so you see mL in your records)
+    # Log transaction
     cur.execute("""
         INSERT INTO transactions
         (uid, volume, snf, water, rate, total, timestamp)
@@ -216,3 +218,4 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     # Using 0.0.0.0 is required for Render to expose the port
     app.run(host="0.0.0.0", port=port)
+
