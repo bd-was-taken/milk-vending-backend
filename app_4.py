@@ -73,11 +73,13 @@ def dispenser_pull():
     
     return jsonify({"status": "waiting"})
 
-# ================= MILK =======================
-# ================= MILK UI =======================
+# ================= MILK UI & LOGIC =======================
 @app.route("/ui/milk")
 def milk_page():
-    return render_template("milk.html")
+    global latest_uid
+    # 🔥 FIX: Pass the scanned UID to the HTML page
+    return render_template("milk.html", scanned_uid=latest_uid)
+
 @app.route("/milk", methods=["POST"])
 def milk_billing():
     global latest_uid
@@ -89,20 +91,15 @@ def milk_billing():
     water = float(request.form["water"])
 
     # 2. DYNAMIC PRICING CONFIGURATION
-    # Example: Each 1% of SNF adds 6.0 to the rate
-    # Each 1% of Water subtracts 2.5 from the rate
     RATE_SNF_COEFF = 6.0   
     RATE_WATER_COEFF = 2.5 
     MINIMUM_RATE = 10.0   # Floor price per Liter to cover overhead
 
     # 3. CALCULATE RATE & VOLUME
-    # Equation: Rate = (SNF * Rate_SNF) - (Water * Rate_Water)
     dynamic_rate = (snf * RATE_SNF_COEFF) - (water * RATE_WATER_COEFF)
-    
-    # Apply the floor price guard
     rate_per_liter = max(dynamic_rate, MINIMUM_RATE)
 
-    # Convert mL to Liters for the final math
+    # Convert mL to Liters for the final billing math
     volume_l = volume_ml / 1000.0 
     total = rate_per_liter * volume_l
 
@@ -129,7 +126,7 @@ def milk_billing():
         (new_balance, uid)
     )
 
-    # Log transaction with the dynamic rate used
+    # Log transaction (Storing volume_ml so you see mL in your records)
     cur.execute("""
         INSERT INTO transactions
         (uid, volume, snf, water, rate, total, timestamp)
@@ -145,10 +142,13 @@ def milk_billing():
 
     latest_uid = ""   
     return redirect(url_for("transactions_page"))
-# ================= RECHARGE ===================
+
+# ================= RECHARGE UI & LOGIC ===================
 @app.route("/ui/recharge")
 def recharge_page():
-    return render_template("recharge.html")
+    global latest_uid
+    # 🔥 FIX: Pass the scanned UID to the HTML page for auto-fill
+    return render_template("recharge.html", scanned_uid=latest_uid)
 
 @app.route("/recharge", methods=["POST"])
 def recharge():
@@ -216,5 +216,3 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     # Using 0.0.0.0 is required for Render to expose the port
     app.run(host="0.0.0.0", port=port)
-
-
