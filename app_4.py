@@ -74,35 +74,28 @@ def dispenser_pull():
     return jsonify({"status": "waiting"})
 
 # ================= MILK =======================
+@app.route("/ui/milk")
+def milk_page():
+    return render_template("milk.html")
+
 @app.route("/milk", methods=["POST"])
 def milk_billing():
     global latest_uid
 
-    # 1. Capture Inputs
     uid = request.form["uid"]
-    volume_ml = float(request.form["volume"])
+    volume = float(request.form["volume"])
     snf = float(request.form["snf"])
     water = float(request.form["water"])
 
-    # 2. DYNAMIC PRICING CONFIGURATION
-    # Example: Each 1% of SNF adds 6.0 to the rate
-    # Each 1% of Water subtracts 2.5 from the rate
-    RATE_SNF_COEFF = 6.0   
-    RATE_WATER_COEFF = 2.5 
-    MINIMUM_RATE = 10.0   # Floor price per Liter to cover overhead
+    # Basic pricing logic
+    rate = 40
+    if snf >= 8.5:
+        rate += 2
+    if water > 2:
+        rate -= 2
 
-    # 3. CALCULATE RATE & VOLUME
-    # Equation: Rate = (SNF * Rate_SNF) - (Water * Rate_Water)
-    dynamic_rate = (snf * RATE_SNF_COEFF) - (water * RATE_WATER_COEFF)
-    
-    # Apply the floor price guard
-    rate_per_liter = max(dynamic_rate, MINIMUM_RATE)
+    total = rate * volume
 
-    # Convert mL to Liters for the final math
-    volume_l = volume_ml / 1000.0 
-    total = rate_per_liter * volume_l
-
-    # 4. DATABASE OPERATIONS
     conn = get_db_connection()
     cur = conn.cursor(dictionary=True)
 
@@ -125,22 +118,24 @@ def milk_billing():
         (new_balance, uid)
     )
 
-    # Log transaction with the dynamic rate used
+    # Log transaction
     cur.execute("""
         INSERT INTO transactions
         (uid, volume, snf, water, rate, total, timestamp)
         VALUES (%s, %s, %s, %s, %s, %s, %s)
-    """, (uid, volume_ml, snf, water, rate_per_liter, total, datetime.now()))
+    """, (uid, volume, snf, water, rate, total, datetime.now()))
 
     conn.commit()
     conn.close()
 
-    # 5. HARDWARE DISPENSING
-    # Send the raw volume_ml to ESP 2
-    pending_dispenses[uid] = int(volume_ml)  
+    # 🔥 ADD TO QUEUE: Tell ESP 2 it is authorized to pump!
+    pending_dispenses[uid] = int(volume)  
 
+    # Clear the UI
     latest_uid = ""   
+
     return redirect(url_for("transactions_page"))
+
 # ================= RECHARGE ===================
 @app.route("/ui/recharge")
 def recharge_page():
@@ -212,4 +207,3 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     # Using 0.0.0.0 is required for Render to expose the port
     app.run(host="0.0.0.0", port=port)
-
