@@ -174,79 +174,77 @@ button:active {
 }
 
 /* Cow Animation (Unchanged) */
+/* ============================================================
+   THE WALKING COW (SHADOW VERSION)
+   Targeting Row 2 (Walking Right) of a 4x5 Sprite Sheet
+   ============================================================ */
+
+/* ============================================================
+   THE WALKING COW (NEW 4-FRAME SHADOW VERSION)
+   ============================================================ */
+
+/* ============================================================
+   THE WALKING COW (SMOOTH LINEAR VERSION)
+   Designed for the 4-frame shadow sprite sheet
+   ============================================================ */
+
+/* ============================================================
+   THE LEISURELY COW (WITH TONGUE & PAUSES)
+   ============================================================ */
+
 .walking-cow {
   position: fixed;
-  bottom: 62%; 
-  left: -150px;
-  width: 100px; 
-  height: 80px; 
+  bottom: 61%; 
+  left: -120px;
+  width: 96px;  
+  height: 96px; 
   z-index: 5; 
   pointer-events: none; 
   image-rendering: pixelated; 
   
-  background-image: url('/static/images/white_cow_walking-ezgif.com-gif-to-sprite-converter.png');
-  background-size: 600% 100%; 
+  /* Make sure the filename matches your folder */
+  background-image: url('/static/images/cow_shadow.webp');
+  background-size: 400% 500%; 
   background-repeat: no-repeat;
-  
-  /* CHANGED: Doubled both times to make her walk exactly half as fast! */
+
+  /* We combine movement and row-switching into one long animation.
+     - linearWalk: 50s (Very slow crossing)
+     - legMovement: 0.9s (Slower leg shuffling to match the pace)
+  */
   animation: 
-    syncWalk 40.8s linear infinite,          
-    animateSprite 4.08s step-end infinite;   
+    linearWalk 50s linear infinite,          
+    legMovement 0.9s steps(3) infinite;   
 }
 
-/* The Sprite Frames (Calculated to your exact EZGif delays) 
-  step-end holds the image perfectly still until the exact moment of the next percentage 
+/* LEG CYCLE: 
+   Cycles through the 4 frames in whatever row the cow is currently on.
 */
-@keyframes animateSprite {
-  0%      { background-position: 0% 0; }    /* Frame 1: 0ms */
-  14.7%   { background-position: 20% 0; }   /* Frame 2: 300ms */
-  29.4%   { background-position: 40% 0; }   /* Frame 3: 600ms */
-  44.1%   { background-position: 60% 0; }   /* Frame 4: 900ms */
-  58.8%   { background-position: 80% 0; }   /* Frame 5 (Graze): 1200ms */
-  83.3%   { background-position: 100% 0; }  /* Frame 6 (Graze): 1700ms */
-  100%    { background-position: 100% 0; }  /* 2040ms loop resets */
+@keyframes legMovement {
+  from { background-position-x: 0%; }
+  to   { background-position-x: 100%; }
 }
 
-/* The exact same perfect math from before, now permanently locked in sync */
-@keyframes syncWalk {
-  /* Step 1 */
-  0%     { transform: translateX(0); }
-  5.88%  { transform: translateX(12vw); }
-  10%    { transform: translateX(12vw); }
+/* MOVEMENT & MOOD LOGIC:
+   The cow walks for a bit (Row 2: 25%), then stops to lick/look around (Row 5: 100%).
+*/
+@keyframes linearWalk {
+  /* 0-20%: WALKING */
+  0%   { transform: translateX(0); background-position-y: 25%; }
+  20%  { transform: translateX(25vw); background-position-y: 25%; }
 
-  /* Step 2 */
-  15.88% { transform: translateX(24vw); }
-  20%    { transform: translateX(24vw); }
+  /* 20-30%: STOP & LICK (Row 5) */
+  20.1%{ transform: translateX(25vw); background-position-y: 100%; }
+  30%  { transform: translateX(25vw); background-position-y: 100%; }
 
-  /* Step 3 */
-  25.88% { transform: translateX(36vw); }
-  30%    { transform: translateX(36vw); }
+  /* 30-60%: WALKING */
+  30.1%{ transform: translateX(25vw); background-position-y: 25%; }
+  60%  { transform: translateX(65vw); background-position-y: 25%; }
 
-  /* Step 4 */
-  35.88% { transform: translateX(48vw); }
-  40%    { transform: translateX(48vw); }
+  /* 60-75%: STOP & LICK (Row 5) */
+  60.1%{ transform: translateX(65vw); background-position-y: 100%; }
+  75%  { transform: translateX(65vw); background-position-y: 100%; }
 
-  /* Step 5 */
-  45.88% { transform: translateX(60vw); }
-  50%    { transform: translateX(60vw); }
-
-  /* Step 6 */
-  55.88% { transform: translateX(72vw); }
-  60%    { transform: translateX(72vw); }
-
-  /* Step 7 */
-  65.88% { transform: translateX(84vw); }
-  70%    { transform: translateX(84vw); }
-
-  /* Step 8 */
-  75.88% { transform: translateX(96vw); }
-  80%    { transform: translateX(96vw); }
-
-  /* Step 9 */
-  85.88% { transform: translateX(108vw); }
-  90%    { transform: translateX(108vw); }
-
-  /* Step 10 */
-  95.88% { transform: translateX(120vw); } 
-  100%   { transform: translateX(120vw); }
+  /* 75-100%: FINISH WALK */
+  75.1%{ transform: translateX(65vw); background-position-y: 25%; }
+  100% { transform: translateX(115vw); background-position-y: 25%; }
 }
