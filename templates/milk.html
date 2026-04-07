@@ -242,19 +242,22 @@ setInterval(fetchRFID, 800);
         <label>SNF</label>
         <input 
           type="text" 
+          id="snf_display"
           value="{{ snf }}" 
           readonly
           style="background: rgba(200,200,200,0.3); cursor: not-allowed; color: #555;"
         >
-        <input type="hidden" name="snf" value="{{ snf }}">
+        <input type="hidden" id="snf_hidden" name="snf" value="{{ snf }}">
 
         <label>Water Content (%)</label>
         <input 
           type="text" 
+          id="water_display"
           value="{{ water }}" 
           readonly
           style="background: rgba(200,200,200,0.3); cursor: not-allowed; color: #555;"
         >
+        <input type="hidden" id="water_hidden" name="water" value="{{ water }}">
         <input type="hidden" name="water" value="{{ water }}">
 
         <button type="submit" class="liquid-glass-btn submit-btn">
