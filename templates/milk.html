@@ -232,19 +232,21 @@
 
         <label>SNF</label>
         <input 
-          type="number" 
-          step="0.1" 
-          name="snf" 
-          required
+          type="text" 
+          value="{{ snf }}" 
+          readonly
+          style="background: rgba(200,200,200,0.3); cursor: not-allowed; color: #555;"
         >
+        <input type="hidden" name="snf" value="{{ snf }}">
 
         <label>Water Content (%)</label>
         <input 
-          type="number" 
-          step="0.1" 
-          name="water" 
-          required
+          type="text" 
+          value="{{ water }}" 
+          readonly
+          style="background: rgba(200,200,200,0.3); cursor: not-allowed; color: #555;"
         >
+        <input type="hidden" name="water" value="{{ water }}">
 
         <button type="submit" class="liquid-glass-btn submit-btn">
           Dispense Milk
