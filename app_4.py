@@ -157,6 +157,30 @@ def milk_billing():
     latest_uid = ""
     return redirect(url_for("transactions_page"))
 
+# ================= MILK ANALYSIS API (Sensor ESP → Backend) =================
+@app.route("/api/milk_analysis", methods=["POST"])
+def receive_milk_analysis():
+    global latest_snf, latest_water
+
+    data = request.get_json()
+    if not data:
+        return jsonify({"status": "error", "message": "No JSON received"}), 400
+
+    latest_snf   = float(data.get("snf_percent",  0.0))
+    latest_water = 100.0 if data.get("water_adulteration", False) else 0.0
+
+    print(f"🧪 MILK ANALYSIS RECEIVED")
+    print(f"   SNF:         {latest_snf}%")
+    print(f"   Fat:         {data.get('fat_percent')}%")
+    print(f"   Protein:     {data.get('protein_percent')}%")
+    print(f"   Lactose:     {data.get('lactose_percent')}%")
+    print(f"   Salt:        {data.get('salt_percent')}%")
+    print(f"   Temperature: {data.get('temperature_c')}°C")
+    print(f"   Water Adult: {data.get('water_adulteration')}")
+
+    return jsonify({"status": "ok"}), 200
+
+
 # ================= RECHARGE =======================
 @app.route("/ui/recharge")
 def recharge_page():
