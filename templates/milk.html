@@ -182,9 +182,9 @@
         document.getElementById("snf_display").value = d.snf;
         document.getElementById("snf_hidden").value  = d.snf;
       }
-      if (d.water !== undefined) {
-        document.getElementById("water_display").value = d.water;
-        document.getElementById("water_hidden").value  = d.water;
+      if (d.fat !== undefined) {
+        document.getElementById("fat_display").value = d.fat;
+        document.getElementById("fat_hidden").value  = d.fat;
       }
     });
 }
@@ -249,16 +249,16 @@ setInterval(fetchRFID, 800);
         >
         <input type="hidden" id="snf_hidden" name="snf" value="{{ snf }}">
 
-        <label>Water Content (%)</label>
+        <label>Fat (%)</label>
         <input 
           type="text" 
-          id="water_display"
-          value="{{ water }}" 
+          id="fat_display"
+          value="{{ fat }}" 
           readonly
           style="background: rgba(200,200,200,0.3); cursor: not-allowed; color: #555;"
         >
-        <input type="hidden" id="water_hidden" name="water" value="{{ water }}">
-        <input type="hidden" name="water" value="{{ water }}">
+        <input type="hidden" id="fat_hidden" name="fat" value="{{ fat }}">
+        <input type="hidden" name="fat" value="{{ fat }}">
 
         <button type="submit" class="liquid-glass-btn submit-btn">
           Dispense Milk
