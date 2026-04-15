@@ -113,14 +113,14 @@ def milk_billing():
     uid      = request.form["uid"]
     volume_l = float(request.form["volume"])
     snf      = float(request.form["snf"])    # Hidden field, pre-filled from sensor
-    water    = float(request.form["water"])  # Hidden field, pre-filled from sensor
+    fat      = float(request.form["fat"])# Hidden field, pre-filled from sensor
 
     # ---- DYNAMIC PRICING ----
     RATE_SNF_COEFF   = 6.0
-    RATE_WATER_COEFF = 2.5
+    RATE_FAT_COEFF = 8.0
     MINIMUM_RATE     = 10.0
 
-    dynamic_rate   = (snf * RATE_SNF_COEFF) - (water * RATE_WATER_COEFF)
+    dynamic_rate   = (snf * RATE_SNF_COEFF) + (fat * RATE_FAT_COEFF)
     rate_per_liter = max(dynamic_rate, MINIMUM_RATE)
     total          = rate_per_liter * volume_l
     volume_ml      = volume_l * 1000.0
@@ -160,14 +160,14 @@ def milk_billing():
 # ================= MILK ANALYSIS API (Sensor ESP → Backend) =================
 @app.route("/api/milk_analysis", methods=["POST"])
 def receive_milk_analysis():
-    global latest_snf, latest_water
+    global latest_snf, latest_fat
 
     data = request.get_json()
     if not data:
         return jsonify({"status": "error", "message": "No JSON received"}), 400
 
     latest_snf   = float(data.get("snf_percent",  0.0))
-    latest_water = 100.0 if data.get("water_adulteration", False) else 0.0
+    latest_fat   = float(data.get("fat_percent", 0.0))
 
     print(f"🧪 MILK ANALYSIS RECEIVED")
     print(f"   SNF:         {latest_snf}%")
