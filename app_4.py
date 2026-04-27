@@ -47,9 +47,11 @@ def home():
 def receive_rfid():
     global latest_uid
     data = request.get_json()
+    if not data:
+        return jsonify({"status": "error", "message": "No JSON received"}), 400
     latest_uid = data.get("uid", "")
-    print(f"💳 RFID RECEIVED  | UID: {latest_uid}")
-    return jsonify({"status": "ok"})
+    print(f"💳 RFID RECEIVED | UID: {latest_uid}")
+    return jsonify({"status": "ok"}), 200
 
 @app.route("/api/rfid/latest")
 def get_latest_rfid():
@@ -68,8 +70,8 @@ def receive_milk_analysis():
     if not data:
         return jsonify({"status": "error", "message": "No JSON received"}), 400
 
-    latest_fat = float(data.get("fat_percent",  0.0))
-    latest_snf = float(data.get("snf_percent",  0.0))
+    latest_fat = float(data.get("fat_percent", 0.0))
+    latest_snf = float(data.get("snf_percent", 0.0))
 
     print(f"🧪 MILK ANALYSIS RECEIVED")
     print(f"   Fat:         {latest_fat}%")
@@ -82,21 +84,23 @@ def receive_milk_analysis():
     return jsonify({"status": "ok"}), 200
 
 # ================= DISPENSER API (Backend → ESP2) =================
+# ESP2 polls this — only place that pops the job
 @app.route("/api/dispenser/pull", methods=["GET"])
 def dispenser_pull():
     if pending_dispenses:
         uid = list(pending_dispenses.keys())[0]
-        vol = pending_dispenses.pop(uid)
+        vol = pending_dispenses.pop(uid)   # ← consumed here, nowhere else
         print(f"🥛 ESP2 Pulled Job: {vol}mL for {uid}")
         return jsonify({"status": "dispense", "uid": uid, "volume": vol})
     return jsonify({"status": "waiting"})
 
 # ================= CHECK DISPENSE (ESP1 polls this) =================
+# ESP1 only peeks — does NOT pop the job so ESP2 can still consume it
 @app.route("/api/check_dispense", methods=["GET"])
 def check_dispense():
     uid = request.args.get("uid", "")
     if uid in pending_dispenses:
-        vol = pending_dispenses.pop(uid)
+        vol = pending_dispenses[uid]       # ← peek only, no pop
         return jsonify({"status": "dispense", "volume": vol})
     return jsonify({"status": "waiting"})
 
@@ -146,7 +150,10 @@ def milk_billing():
 
     new_balance = float(user["balance"]) - total
 
-    cur.execute("UPDATE users SET balance=%s WHERE uid=%s", (new_balance, uid))
+    cur.execute(
+        "UPDATE users SET balance=%s WHERE uid=%s",
+        (new_balance, uid)
+    )
     cur.execute("""
         INSERT INTO transactions (uid, volume, snf, fat, rate, total, timestamp)
         VALUES (%s, %s, %s, %s, %s, %s, %s)
@@ -157,6 +164,7 @@ def milk_billing():
 
     # ── Queue Dispense for ESP2 ──
     pending_dispenses[uid] = int(volume_ml)
+    print(f"📋 Queued: {int(volume_ml)}mL for {uid}")
 
     latest_uid = ""
     return redirect(url_for("transactions_page"))
@@ -176,7 +184,10 @@ def recharge():
 
     cur.execute("SELECT uid FROM users WHERE uid=%s", (uid,))
     if cur.fetchone():
-        cur.execute("UPDATE users SET balance = balance + %s WHERE uid=%s", (amount, uid))
+        cur.execute(
+            "UPDATE users SET balance = balance + %s WHERE uid=%s",
+            (amount, uid)
+        )
     else:
         cur.execute(
             "INSERT INTO users (uid, balance, name) VALUES (%s, %s, %s)",
